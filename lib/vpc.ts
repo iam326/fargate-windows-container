@@ -11,7 +11,11 @@ export class VpcStack extends cdk.Stack {
     super(scope, id, props);
 
     const { projectName } = props;
+
     const cidr = '10.100.0.0/16';
+    const cidrMask = 24;
+    const maxAzs = 2;
+    const natGateways = 1;
 
     // VPC
     new ec2.Vpc(this, 'Vpc', {
@@ -19,19 +23,19 @@ export class VpcStack extends cdk.Stack {
       ipAddresses: ec2.IpAddresses.cidr(cidr),
       subnetConfiguration: [
         {
-          cidrMask: 24,
+          cidrMask,
           name: 'public',
           subnetType: ec2.SubnetType.PUBLIC,
           mapPublicIpOnLaunch: false,
         },
         {
-          cidrMask: 24,
+          cidrMask,
           name: 'private',
           subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
         },
       ],
-      maxAzs: 2,
-      natGateways: 1,
+      maxAzs,
+      natGateways,
     });
   }
 }

@@ -15,6 +15,7 @@ export class FargateStack extends cdk.Stack {
     super(scope, id, props);
 
     const { projectName } = props;
+
     const port = 80;
     const cpu = 1024;
     const memory = 2048;
@@ -33,7 +34,7 @@ export class FargateStack extends cdk.Stack {
     });
     albSecurityGroup.addIngressRule(
       ec2.Peer.anyIpv4(),
-      ec2.Port.tcp(80),
+      ec2.Port.tcp(port),
       'Allow HTTP traffic'
     );
 
@@ -48,7 +49,7 @@ export class FargateStack extends cdk.Stack {
     );
     serviceSecurityGroup.addIngressRule(
       albSecurityGroup,
-      ec2.Port.tcp(80),
+      ec2.Port.tcp(port),
       'Allow traffic from ALB'
     );
 
@@ -91,6 +92,7 @@ export class FargateStack extends cdk.Stack {
         memoryLimitMiB: memory,
         executionRole,
         taskRole,
+        // Windows Server 2019 を指定する
         runtimePlatform: {
           cpuArchitecture: ecs.CpuArchitecture.X86_64,
           operatingSystemFamily:
@@ -103,7 +105,7 @@ export class FargateStack extends cdk.Stack {
     const container = taskDefinition.addContainer(
       'ECSTaskDefinitionContainer',
       {
-        // DockerHub に対して直接イメージを PULL する
+        // DockerHub から Docker イメージを取得する
         image: ecs.ContainerImage.fromRegistry(
           'mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019'
         ),
