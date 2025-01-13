@@ -1,9 +1,8 @@
 # fargate-windows-container
 
-## Stacks
+[【AWS CDK】AWS Fargate で Windows コンテナを起動してみた]()
 
 ```
-% cdk list
-fargate-windows-container-vpc-stack
-fargate-windows-container-fargate-stack
+% cdk deploy fargate-windows-container-vpc-stack
+% cdk deploy fargate-windows-container-fargate-stack
 ```
