@@ -35,7 +35,7 @@ export class Ec2Stack extends cdk.Stack {
       owners: ['amazon'],
       windows: true,
     });
-    // こっちだと AMI のバージョンが更新されるたびに EC2 インスタンスが再作成されてしまう
+    // こちらだと AMI のバージョンが更新されるたびに EC2 インスタンスが再作成されてしまう
     // const machineImage = new ec2.WindowsImage(
     //   ec2.WindowsVersion.WINDOWS_SERVER_2019_JAPANESE_FULL_BASE
     // );
@@ -49,6 +49,45 @@ export class Ec2Stack extends cdk.Stack {
       }
     );
 
+    const instanceRole = new iam.Role(this, 'EC2InstanceRole', {
+      roleName: `${projectName}-instance-role`,
+      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+    });
+
+    const keyPairName = `${projectName}-ec2-key`;
+    const keyPair = new ec2.KeyPair(this, 'EC2KeyPair', {
+      keyPairName,
+    });
+
+    const volumeSize = 100;
+    const vpcSubnets = vpc.selectSubnets({ subnetGroupName: 'private' });
+    const blockDevices = [
+      {
+        // ルートボリューム上書き
+        deviceName: '/dev/sda1',
+        volume: ec2.BlockDeviceVolume.ebs(volumeSize, {
+          volumeType: ec2.EbsDeviceVolumeType.GP3,
+        }),
+      },
+    ];
+
+    new ec2.Instance(this, 'EC2Instance', {
+      vpc,
+      vpcSubnets,
+      instanceName: `${projectName}-instance`,
+      instanceType,
+      machineImage,
+      securityGroup: instanceSecurityGroup,
+      role: instanceRole,
+      keyPair,
+      blockDevices,
+      ebsOptimized: true,
+      requireImdsv2: true,
+    });
+
+    // EIC Endpoint
+    // https://dev.classmethod.jp/articles/rdp-connection-to-windows-server-using-ec2-instance-connect-endpoint-eic/
+    // https://zenn.dev/thyt_lab/articles/7fc528985dce9c
     const endpointSecurityGroup = new ec2.SecurityGroup(
       this,
       'Ec2InstanceConnectEndpointSecurityGroup',
@@ -71,46 +110,6 @@ export class Ec2Stack extends cdk.Stack {
       ec2.Port.tcp(3389)
     );
 
-    const keyPairName = `${projectName}-ec2-key`;
-    const keyPair = ec2.KeyPair.fromKeyPairName(
-      this,
-      'EC2KeyPair',
-      keyPairName
-    );
-
-    const instanceRole = new iam.Role(this, 'EC2InstanceRole', {
-      roleName: `${projectName}-instance-role`,
-      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
-    });
-
-    const volumeSize = 100;
-    const vpcSubnets = vpc.selectSubnets({ subnetGroupName: 'private' });
-    const blockDevices = [
-      {
-        // ルートボリューム上書き
-        deviceName: '/dev/sda1',
-        volume: ec2.BlockDeviceVolume.ebs(volumeSize, {
-          volumeType: ec2.EbsDeviceVolumeType.GP3,
-        }),
-      },
-    ];
-
-    new ec2.Instance(this, 'EC2Instance', {
-      vpc,
-      vpcSubnets,
-      instanceType,
-      machineImage,
-      securityGroup: instanceSecurityGroup,
-      instanceName: `${projectName}-instance`,
-      requireImdsv2: true,
-      keyPair,
-      ebsOptimized: true,
-      role: instanceRole,
-      blockDevices,
-    });
-
-    // https://dev.classmethod.jp/articles/rdp-connection-to-windows-server-using-ec2-instance-connect-endpoint-eic/
-    // https://zenn.dev/thyt_lab/articles/7fc528985dce9c
     new ec2.CfnInstanceConnectEndpoint(this, 'Ec2InstanceConnectEndpoint', {
       subnetId: vpc.selectSubnets({ subnetGroupName: 'private' }).subnetIds[0],
       securityGroupIds: [endpointSecurityGroup.securityGroupId],

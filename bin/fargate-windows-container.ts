@@ -5,6 +5,7 @@ import { VpcStack } from '../lib/vpc';
 import { EcrStack } from '../lib/ecr';
 import { OicdStack } from '../lib/oicd';
 import { FargateStack } from '../lib/fargate';
+import { Ec2Stack } from '../lib/ec2';
 
 const app = new cdk.App();
 
@@ -30,6 +31,11 @@ new OicdStack(app, `${projectName}-oicd-stack`, {
 });
 
 new FargateStack(app, `${projectName}-fargate-stack`, {
+  projectName,
+  env,
+});
+
+new Ec2Stack(app, `${projectName}-ec2-stack`, {
   projectName,
   env,
 });
