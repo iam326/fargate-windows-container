@@ -98,15 +98,15 @@ export class Ec2Stack extends cdk.Stack {
       }
     );
 
-    // EIC Endpoint から EC2 への RDP アクセス受信許可
-    instanceSecurityGroup.addIngressRule(
-      endpointSecurityGroup,
+    // EIC Endpoint → EC2 の RDP アクセスを許可（送信側）
+    endpointSecurityGroup.addEgressRule(
+      instanceSecurityGroup,
       ec2.Port.tcp(3389)
     );
 
-    // EIC Endpoint から EC2 への RDP アクセス送信許可
-    endpointSecurityGroup.addEgressRule(
-      instanceSecurityGroup,
+    // EIC Endpoint → EC2 の RDP アクセスを許可（受信側）
+    instanceSecurityGroup.addIngressRule(
+      endpointSecurityGroup,
       ec2.Port.tcp(3389)
     );
 
