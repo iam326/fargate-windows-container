@@ -6,12 +6,12 @@ import {
   GithubActionsRole,
 } from 'aws-cdk-github-oidc';
 
-type OicdStackProps = cdk.StackProps & {
+type OidcStackProps = cdk.StackProps & {
   projectName: string;
 };
 
-export class OicdStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: OicdStackProps) {
+export class OidcStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: OidcStackProps) {
     super(scope, id, props);
 
     const githubOwnerName = 'iam326';
@@ -25,7 +25,7 @@ export class OicdStack extends cdk.Stack {
       provider: provider,
       owner: githubOwnerName,
       repo: githubRepositoryName,
-      roleName: `${props.projectName}-github-actions-oicd-role`,
+      roleName: `${props.projectName}-github-actions-oidc-role`,
     });
 
     // https://docs.aws.amazon.com/ja_jp/AmazonECR/latest/userguide/image-push-iam.html
